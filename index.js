@@ -13,7 +13,7 @@ const url = process.env.url;
 const app = express();
 app.use(express.json());
 
-const bot = new TelegramBot(botToken, { polling: true });
+const bot = new TelegramBot(botToken);
 
 // ✅ Users obyektini e’lon qilamiz
 const users = {};
