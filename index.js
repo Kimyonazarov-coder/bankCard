@@ -8,12 +8,14 @@ dotenv.config();
 
 const botToken = process.env.BOT_TOKEN;
 const port = process.env.PORT || 3000;
-const url = process.env.url;
+const url = process.env.URL; 
 
 const app = express();
 app.use(express.json());
 
-const bot = new TelegramBot(botToken, {polling: true});
+
+const bot = new TelegramBot(botToken);
+bot.setWebHook(`${url}/${botToken}`);
 
 const users = {};
 
@@ -123,6 +125,12 @@ bot.on("message", async (msg) => {
       bot.sendMessage(chatId, "⚠️ Xatolik yuz berdi. Keyinroq urinib ko'ring.");
     }
   }
+});
+
+// 🔗 Webhook route
+app.post(`/${botToken}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
 });
 
 
