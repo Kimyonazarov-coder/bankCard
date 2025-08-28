@@ -8,34 +8,31 @@ dotenv.config();
 
 const botToken = process.env.BOT_TOKEN;
 const port = process.env.PORT || 3000;
-const url = process.env.url;
 
 const app = express();
 app.use(express.json());
 
-const bot = new TelegramBot(botToken);
+const bot = new TelegramBot(botToken, { polling: true });
 
-// ✅ Users obyektini e’lon qilamiz
 const users = {};
 
-// ✅ SQLite ochish
 const db = new sqlite3.Database("./users.db");
 
-// ✅ Jadvalni yaratib qo‘yish (agar mavjud bo‘lmasa)
-db.run(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY,
-    username TEXT,
-    cardnumber TEXT,
-    owner TEXT,
-    bank TEXT
-  )
-`);
+async function checkSubscription(chatId) {
+  const subscribed = await isSubscribed(chatId);
+  if (!subscribed) {
+    bot.sendMessage(
+      chatId,
+      `❌ Botdan foydalanish uchun kanalimizga obuna bo'ling:\n\n👉 <a href="https://t.me/kimyonazarovuz">KimyonazarovUZ</a>\n\n✅ Obuna bo'lgach, /start buyrug'ini qaytadan yuboring.`,
+      { parse_mode: "HTML", disable_web_page_preview: true }
+    );
+    return false;
+  }
+  return true;
+}
 
-// 🔗 Kanal ID yoki username
 const CHANNEL_ID = "@kimyonazarovuz"; // username shaklida
 
-// ✅ A'zolikni tekshirish funksiyasi
 async function isSubscribed(userId) {
   try {
     const member = await bot.getChatMember(CHANNEL_ID, userId);
@@ -53,16 +50,8 @@ async function isSubscribed(userId) {
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
 
-  // Avval kanalga obuna bo‘lganini tekshiramiz
-  const subscribed = await isSubscribed(chatId);
+    if (!(await checkSubscription(chatId))) return;
 
-  if (!subscribed) {
-    return bot.sendMessage(
-      chatId,
-      `❌ Botdan foydalanish uchun kanalimizga obuna bo‘ling:\n\n👉 <a href="https://t.me/kimyonazarovuz">KimyonazarovUZ</a>\n\n✅ Obuna bo‘lgach, /start buyrug‘ini qaytadan yuboring.`,
-      { parse_mode: "HTML", disable_web_page_preview: true }
-    );
-  }
 
   users[chatId] = { step: "password" };
 
@@ -79,17 +68,9 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text?.trim().replace(/\s+/g, "");
 
-  // 🔐 faqat obuna bo‘lganlar ishlatsin
-  const subscribed = await isSubscribed(chatId);
-  if (!subscribed) {
-    return bot.sendMessage(
-      chatId,
-      `❌ Botdan foydalanish uchun kanalimizga obuna bo‘ling:\n\n👉 <a href="https://t.me/kimyonazarovuz">KimyonazarovUZ</a>\n\n✅ Obuna bo‘lgach, /start buyrug‘ini qaytadan yuboring.`,
-      { parse_mode: "HTML", disable_web_page_preview: true }
-    );
-  }
+  if (!(await checkSubscription(chatId))) return;
 
-  // ✅ faqat 16 ta raqam bo‘lsa
+  // ✅ faqat 16 ta raqam bo'lsa
   if (/^\d{16}$/.test(text)) {
     try {
       bot.sendMessage(chatId, "⏳ Karta tekshirilmoqda...");
@@ -127,11 +108,11 @@ bot.on("message", async (msg) => {
 
         bot.sendMessage(chatId, cardInfo, { parse_mode: "HTML" });
       } else {
-        bot.sendMessage(chatId, "❌ Karta topilmadi yoki noto‘g‘ri raqam.");
+        bot.sendMessage(chatId, "❌ Karta topilmadi yoki noto'g'ri raqam.");
       }
     } catch (err) {
       console.error("API xato:", err.message);
-      bot.sendMessage(chatId, "⚠️ Xatolik yuz berdi. Keyinroq urinib ko‘ring.");
+      bot.sendMessage(chatId, "⚠️ Xatolik yuz berdi. Keyinroq urinib ko'ring.");
     }
     return;
   }
