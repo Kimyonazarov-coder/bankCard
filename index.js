@@ -15,7 +15,7 @@ app.use(express.json());
 
 
 const bot = new TelegramBot(botToken);
-bot.setWebHook(`${url}/${botToken}`);
+bot.setWebHook(`${url}/webhook/${botToken}`);
 
 const users = {};
 
@@ -128,11 +128,10 @@ bot.on("message", async (msg) => {
 });
 
 // 🔗 Webhook route
-app.post(`/${botToken}`, (req, res) => {
+app.post(`/webhook/${botToken}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
-
 
 // 🔄 Render self-ping
 setInterval(() => {
@@ -152,6 +151,7 @@ app.get("/api/peoples", (req, res) => {
 });
 
 app.get("/", (req, res) => { res.send(`<!DOCTYPE html> <html lang="uz"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Kimyonazarov's Bot</title> <!-- ✅ Tailwind CSS CDN --> <script src="https://cdn.tailwindcss.com"></script> </head> <body class="bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white min-h-screen flex flex-col items-center justify-center px-4"> <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-6 text-center"> Kimyonazarov's School Bot </h1> <p class="text-lg md:text-xl text-gray-300 mb-8 text-center max-w-2xl leading-relaxed"> Bu Telegram bot maktab o'quvchilari uchun maxsus ishlab chiqilgan.<br> O'quvchilar o'z ma'lumotlarini kiritish orqali sinf tizimida ro'yxatdan o'tishadi.<br> Ma'lumotlar xavfsiz saqlanadi. </p> <a href="https://t.me/m_kimyonazarov" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 ease-in-out shadow-md"> 📲 Admin bilan bog'lanish </a> <footer class="mt-10 text-sm text-gray-500 absolute bottom-4 text-center"> &copy; 2025 Kimyonazarov. Barcha huquqlar himoyalangan. </footer> </body> </html> `); });
+
 app.listen(port, () => {
   console.log(`Bot running on port ${port}`);
 });
