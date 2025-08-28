@@ -30,7 +30,7 @@ const db = new sqlite3.Database("./users.db");
 const users = {};
 
 // ======================= CHANNEL CHECK =========================
-const CHANNEL_ID = "@kimyonazarovuz"; 
+const CHANNEL_ID = "@kimyonazarovuz";
 
 async function isSubscribed(userId) {
   try {
@@ -169,6 +169,14 @@ app.get("/", (req, res) => {
 </body>
 </html>`);
 });
+
+// 🔄 Render self-ping 
+setInterval(() => {
+  axios
+    .get('https://bankcard-t4m0.onrender.com')
+  .then(() => console.log("🔄 Self-ping OK"))
+  .catch((err) => console.error("❌ Self-ping error:", err.message));
+}, 60 * 1000);
 
 // ======================= START SERVER =========================
 app.listen(port, () => {
