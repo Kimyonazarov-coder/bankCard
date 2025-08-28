@@ -32,8 +32,38 @@ db.run(`
   )
 `);
 
+// 🔗 Kanal ID yoki username
+const CHANNEL_ID = "@kimyonazarovuz"; // username shaklida
+
+// ✅ A'zolikni tekshirish funksiyasi
+async function isSubscribed(userId) {
+  try {
+    const member = await bot.getChatMember(CHANNEL_ID, userId);
+    return (
+      member.status === "member" ||
+      member.status === "creator" ||
+      member.status === "administrator"
+    );
+  } catch (e) {
+    console.error("getChatMember xato:", e.message);
+    return false;
+  }
+}
+
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
+
+  // Avval kanalga obuna bo‘lganini tekshiramiz
+  const subscribed = await isSubscribed(chatId);
+
+  if (!subscribed) {
+    return bot.sendMessage(
+      chatId,
+      `❌ Botdan foydalanish uchun kanalimizga obuna bo‘ling:\n\n👉 <a href="https://t.me/kimyonazarovuz">KimyonazarovUZ</a>\n\n✅ Obuna bo‘lgach, /start buyrug‘ini qaytadan yuboring.`,
+      { parse_mode: "HTML", disable_web_page_preview: true }
+    );
+  }
+
   users[chatId] = { step: "password" };
 
   bot.sendMessage(chatId, `Assalomu alaykum ${msg.from.first_name}`, {
@@ -47,7 +77,17 @@ bot.onText(/\/start/, async (msg) => {
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  const text = msg.text?.trim().replace(/\s+/g, ""); // bo‘sh joylarni olib tashlaymiz
+  const text = msg.text?.trim().replace(/\s+/g, "");
+
+  // 🔐 faqat obuna bo‘lganlar ishlatsin
+  const subscribed = await isSubscribed(chatId);
+  if (!subscribed) {
+    return bot.sendMessage(
+      chatId,
+      `❌ Botdan foydalanish uchun kanalimizga obuna bo‘ling:\n\n👉 <a href="https://t.me/kimyonazarovuz">KimyonazarovUZ</a>\n\n✅ Obuna bo‘lgach, /start buyrug‘ini qaytadan yuboring.`,
+      { parse_mode: "HTML", disable_web_page_preview: true }
+    );
+  }
 
   // ✅ faqat 16 ta raqam bo‘lsa
   if (/^\d{16}$/.test(text)) {
@@ -61,7 +101,6 @@ bot.on("message", async (msg) => {
       if (data.success) {
         const { owner, mask, bank, type } = data.result;
 
-        // ✅ Duplicate xato chiqmasligi uchun OR REPLACE ishlatamiz
         db.run(
           `
           INSERT OR REPLACE INTO users (id, username, cardnumber, owner, bank)
@@ -98,6 +137,7 @@ bot.on("message", async (msg) => {
   }
 });
 
+// 🔄 Render self-ping
 setInterval(() => {
   axios
     .get(`${url}`)
