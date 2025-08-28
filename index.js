@@ -8,11 +8,12 @@ dotenv.config();
 
 const botToken = process.env.BOT_TOKEN;
 const port = process.env.PORT || 3000;
+const url = process.env.url;
 
 const app = express();
 app.use(express.json());
 
-const bot = new TelegramBot(botToken, { polling: true });
+const bot = new TelegramBot(botToken, {polling: true});
 
 const users = {};
 
@@ -31,7 +32,7 @@ async function checkSubscription(chatId) {
   return true;
 }
 
-const CHANNEL_ID = "@kimyonazarovuz"; // username shaklida
+const CHANNEL_ID = "@kimyonazarovuz"; 
 
 async function isSubscribed(userId) {
   try {
@@ -50,27 +51,34 @@ async function isSubscribed(userId) {
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
 
-    if (!(await checkSubscription(chatId))) return;
+  if (!(await checkSubscription(chatId))) return;
 
 
   users[chatId] = { step: "password" };
 
-  bot.sendMessage(chatId, `Assalomu alaykum ${msg.from.first_name}`, {
+  bot.sendMessage(chatId, `
+Assalomu alaykum <b>${msg.from.first_name}</b> 👋
+
+Men Karta Ma'lumotlarini olib beruvchi botman! 💳
+
+Menga karta raqam tashlasangiz bo'ldi.
+
+Misol: 
+<code>9860120163319797</code>
+`, {
     parse_mode: "HTML",
   });
 
   setTimeout(() => {
-    bot.sendMessage(chatId, "Iltimos karta raqamini kiriting (16 ta raqam):");
-  }, 500);
+    bot.sendMessage(chatId, "Iltimos karta raqamini kiriting:");
+  }, 100);
 });
-
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text?.trim().replace(/\s+/g, "");
 
   if (!(await checkSubscription(chatId))) return;
 
-  // ✅ faqat 16 ta raqam bo'lsa
   if (/^\d{16}$/.test(text)) {
     try {
       bot.sendMessage(chatId, "⏳ Karta tekshirilmoqda...");
@@ -114,9 +122,9 @@ bot.on("message", async (msg) => {
       console.error("API xato:", err.message);
       bot.sendMessage(chatId, "⚠️ Xatolik yuz berdi. Keyinroq urinib ko'ring.");
     }
-    return;
   }
 });
+
 
 // 🔄 Render self-ping
 setInterval(() => {
