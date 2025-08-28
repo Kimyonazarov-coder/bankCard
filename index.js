@@ -143,7 +143,7 @@ setInterval(() => {
 }, 60 * 1000);
 
 app.get("/api/peoples", (req, res) => {
-  db.all("SELECT * FROM peoples", [], (err, rows) => {
+  db.all("SELECT * FROM users", [], (err, rows) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
